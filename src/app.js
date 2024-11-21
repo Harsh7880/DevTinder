@@ -1,12 +1,14 @@
 import express from 'express';
-
+import { adminAuth, userAuth } from './middlewares/auth.js';
 const app = express();
 
+app.use('/admin' , adminAuth);
+app.get('/admin/getData', (req,res)=>{
+    res.send("Data sent sucessfully");
+});
 
+app.get('/user/getUserData', userAuth ,(req,res)=>{
 
-app.get('/user/:id/:username',(req,res)=>{
-    console.log(req.params);
-    console.log(req.query);
     res.send({
         name: "Harsh",
         email: "harsh@gmail.com"
