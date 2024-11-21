@@ -4,17 +4,22 @@ const app = express();
 
 
 
-app.get('/', (req,res) => {
-    res.send("Hello this is home page")
+app.get('/user/:id/:username',(req,res)=>{
+    console.log(req.params);
+    console.log(req.query);
+    res.send({
+        name: "Harsh",
+        email: "harsh@gmail.com"
+    })
 })
 
-app.get('/hello', (req,res) => {
-    res.send("Hello this is hello page")
-})
-app.get('/test', (req,res) => {
-    res.send("Hello this is text page")
+app.post('/user',(req,res)=>{
+    res.send("Data Saved Successfully");
 })
 
+app.delete('/user', (req,res) => {
+    res.send("User Deleted Successfully");
+})
 
 app.listen(3000, ()=>{
     console.log("Server is ruuning in port 3000..........")
