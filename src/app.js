@@ -1,28 +1,30 @@
 import express from 'express';
 import { adminAuth, userAuth } from './middlewares/auth.js';
+import {connectDB} from './config/db.js';
+import { userModel } from './models/user.js';
 const app = express();
 
-app.use('/admin' , adminAuth);
-app.get('/admin/getData', (req,res)=>{
-    res.send("Data sent sucessfully");
-});
 
-app.get('/user/getUserData', userAuth ,(req,res)=>{
+app.post('/signup',async (req,res) => {
+    const userData = {
+        firstName: "Viral",
+        lastName: "Kohli",
+        email: "virat@gmail.com",
+        age: 24,
+        gender: "Male",
+        password: "Virat@1234"
+    }
+    const user = new userModel(userData);
+    await user.save();
+    res.send("User Added Successfully!");
+})
 
-    res.send({
-        name: "Harsh",
-        email: "harsh@gmail.com"
+connectDB().then(()=>{
+    console.log("Database connection established");
+    app.listen(3000, ()=>{
+        console.log("Server is running in port 3000..........")
     })
+}).catch((err) => {
+    console.log("Somthing Went wrong, Database is not connected")
 })
 
-app.post('/user',(req,res)=>{
-    res.send("Data Saved Successfully");
-})
-
-app.delete('/user', (req,res) => {
-    res.send("User Deleted Successfully");
-})
-
-app.listen(3000, ()=>{
-    console.log("Server is ruuning in port 3000..........")
-})
