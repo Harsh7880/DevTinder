@@ -20,8 +20,8 @@ app.post('/signup', async (req, res) => {
 app.get('/user', async (req, res) => {
 
     try {
-        const email = req.body.email;
-        const user = await userModel.findOne({email});
+        const userId = req.body.userId;
+        const user = await userModel.findById(userId);
         if(!user){
             res.status(404).send("User not Found");  
         }else{
@@ -35,6 +35,20 @@ app.get('/user', async (req, res) => {
     }
 })
 
+app.patch('/user', async(req,res) => {
+    try {
+ 
+        const userId = req.body.userId;
+        const data = req.body;
+        console.log(data)
+        await userModel.findByIdAndUpdate(userId, data)
+        res.send("User Updated Successfuly");
+        
+    } catch (error) {
+        res.status(404).status("Something went wrong while updating the user");
+
+    }
+})
 
 app.get('/feed', async(req,res)=>{
     try {
@@ -47,6 +61,20 @@ app.get('/feed', async(req,res)=>{
     } catch (error) {
         res.status(400).send("Something went wrong")
     }
+})
+
+
+
+app.delete('/user', async (req,res) => {
+ try {
+    
+    const userId = req.body.userId
+    await userModel.findByIdAndDelete(userId);
+    res.send("User deleted successfylly");
+
+ } catch (error) {
+    res.status(400).send("Something went wrong while deleting data")
+ }
 })
 
 connectDB().then(() => {
