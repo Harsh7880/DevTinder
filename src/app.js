@@ -11,8 +11,8 @@ app.post('/signup', async (req, res) => {
         const user = new userModel(req.body);
         await user.save();
         res.send(`User Added Successfully with userName: ${req.body.firstName} `);
-    } catch (error) {
-        res.status(400).send("Error while Saving the user in database");
+    } catch (err) {
+        res.status(400).send("Error while Saving the user in database :" + err.message);
     }
 })
 
@@ -35,17 +35,40 @@ app.get('/user', async (req, res) => {
     }
 })
 
-app.patch('/user', async(req,res) => {
+app.patch('/user/:userId', async(req,res) => {
     try {
  
-        const userId = req.body.userId;
+        const userId = req.params?.userId;
         const data = req.body;
-        console.log(data)
+        console.log("Update started ", userId);
+        const ALLOWED_UPDATES = [
+            "firstName",
+            "lastName",
+            "age",
+            "gender",
+            "password",
+            "about",
+            "photoUrl",
+            "skills"
+        ]
+   
+    
+        const isUpdateAllowed = Object.keys(data).every((k) =>{
+             ALLOWED_UPDATES.includes(k)});
+      
+        if(data?.skills.length > 10){
+            throw new Error("Please Add skills below 10");
+        }
+             
+        if(!isUpdateAllowed){
+            throw new Error("Update not allowed");
+        }
+     
         await userModel.findByIdAndUpdate(userId, data)
         res.send("User Updated Successfuly");
         
     } catch (error) {
-        res.status(404).status("Something went wrong while updating the user");
+        res.status(404).send("Something went wrong while updating the user :" + error.message);
 
     }
 })
