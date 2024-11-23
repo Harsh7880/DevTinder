@@ -1,6 +1,7 @@
 import express from 'express';
 import { connectDB } from './config/db.js';
 import { userModel } from './models/user.js';
+import validator from 'validator';
 
 const app = express();
 app.use(express.json())
@@ -52,11 +53,10 @@ app.patch('/user/:userId', async(req,res) => {
             "skills"
         ]
    
-    
         const isUpdateAllowed = Object.keys(data).every((k) =>{
              ALLOWED_UPDATES.includes(k)});
       
-        if(data?.skills.length > 10){
+        if(data?.skills?.length > 10){
             throw new Error("Please Add skills below 10");
         }
              
