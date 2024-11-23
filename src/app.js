@@ -29,6 +29,24 @@ app.post('/signup', async (req, res) => {
     }
 })
 
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await userModel.findOne({ email: email })
+        if (!user) {
+            throw new Error("User does not exists");
+        }
+        const isPasswordValid = await bcrypt.compare(password, user?.password);
+        if (isPasswordValid) {
+            res.send("User login in Sucessfull............");
+        } else {
+            throw new Error("Invalid Credetials");
+
+        }
+    } catch (error) {
+        res.status(400).send("Somthing Went wrong : " + error.message);
+    }
+})
 
 app.get('/user', async (req, res) => {
 
