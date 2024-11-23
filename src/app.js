@@ -1,15 +1,27 @@
 import express from 'express';
 import { connectDB } from './config/db.js';
 import { userModel } from './models/user.js';
-import validator from 'validator';
-
+import bcrypt from "bcrypt";
+import { validateUserFields } from './utils/validations.js';
 const app = express();
 app.use(express.json())
 
 app.post('/signup', async (req, res) => {
 
+    const { firstName, lastName, email, password } = req.body;
     try {
-        const user = new userModel(req.body);
+        // Validate all the user fields
+        validateUserFields(req);
+        // encrypt the password 
+        const encyptedPassword = await bcrypt.hash(password, 10);
+        console.log(encyptedPassword);
+        // store the data to db
+        const user = new userModel({
+            firstName,
+            lastName,
+            email,
+            password: encyptedPassword
+        });
         await user.save();
         res.send(`User Added Successfully with userName: ${req.body.firstName} `);
     } catch (err) {
@@ -23,81 +35,77 @@ app.get('/user', async (req, res) => {
     try {
         const userId = req.body.userId;
         const user = await userModel.findById(userId);
-        if(!user){
-            res.status(404).send("User not Found");  
-        }else{
+        if (!user) {
+            res.status(404).send("User not Found");
+        } else {
             console.log(user)
             res.send(user);
         }
-  
+
 
     } catch (error) {
         res.status(404).status("Something went wrong while fteching the user");
     }
 })
 
-app.patch('/user/:userId', async(req,res) => {
+app.patch('/user/:userId', async (req, res) => {
     try {
- 
+
         const userId = req.params?.userId;
         const data = req.body;
-        console.log("Update started ", userId);
         const ALLOWED_UPDATES = [
             "firstName",
             "lastName",
             "age",
             "gender",
-            "password",
             "about",
             "photoUrl",
             "skills"
         ]
-   
-        const isUpdateAllowed = Object.keys(data).every((k) =>{
-             ALLOWED_UPDATES.includes(k)});
-      
-        if(data?.skills?.length > 10){
+
+        const isUpdateAllowed = Object.keys(data).every(k => ALLOWED_UPDATES.includes(k));
+        if (data?.skills?.length > 10) {
             throw new Error("Please Add skills below 10");
         }
-             
-        if(!isUpdateAllowed){
+
+        if (!isUpdateAllowed) {
             throw new Error("Update not allowed");
         }
-     
-        await userModel.findByIdAndUpdate(userId, data)
+
+        await userModel.findByIdAndUpdate(userId, data, {
+            runValidators: true
+        })
         res.send("User Updated Successfuly");
-        
+
     } catch (error) {
         res.status(404).send("Something went wrong while updating the user :" + error.message);
 
     }
 })
 
-app.get('/feed', async(req,res)=>{
+app.get('/feed', async (req, res) => {
     try {
-       const users = await userModel.find({});
-       if(users.length === 0){
-        res.status(404).send("User's not Found");  
-    }else{
-        res.send(users);
-    }
+        const users = await userModel.find({});
+        if (users.length === 0) {
+            res.status(404).send("User's not Found");
+        } else {
+            res.send(users);
+        }
     } catch (error) {
         res.status(400).send("Something went wrong")
     }
 })
 
+app.delete('/user', async (req, res) => {
+    try {
 
+        const userId = req.body.userId
+        await userModel.findByIdAndDelete(userId);
+        res.send("User deleted successfylly");
 
-app.delete('/user', async (req,res) => {
- try {
-    
-    const userId = req.body.userId
-    await userModel.findByIdAndDelete(userId);
-    res.send("User deleted successfylly");
-
- } catch (error) {
-    res.status(400).send("Something went wrong while deleting data")
- }
+    } catch (error) {
+        res.status(400).send("Something went wrong while deleting data")
+    }
 })
 
 connectDB().then(() => {
