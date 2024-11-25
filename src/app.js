@@ -3,19 +3,21 @@ import { connectDB } from './config/db.js';
 import { userModel } from './models/user.js';
 import bcrypt from "bcrypt";
 import { validateUserFields } from './utils/validations.js';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken'
 const app = express();
 app.use(express.json())
+app.use(cookieParser());
 
 app.post('/signup', async (req, res) => {
 
     const { firstName, lastName, email, password } = req.body;
     try {
-        // Validate all the user fields
+
         validateUserFields(req);
-        // encrypt the password 
+
         const encyptedPassword = await bcrypt.hash(password, 10);
-        console.log(encyptedPassword);
-        // store the data to db
+
         const user = new userModel({
             firstName,
             lastName,
@@ -38,31 +40,35 @@ app.post('/login', async (req, res) => {
         }
         const isPasswordValid = await bcrypt.compare(password, user?.password);
         if (isPasswordValid) {
+
+            const jwtToken = await jwt.sign({_id : user._id}, "devTinder@harsh");
+            res.cookie("token", jwtToken);
             res.send("User login in Sucessfull............");
+
         } else {
             throw new Error("Invalid Credetials");
-
         }
     } catch (error) {
         res.status(400).send("Somthing Went wrong : " + error.message);
     }
 })
 
-app.get('/user', async (req, res) => {
-
+app.get('/profile', async(req,res) => {
     try {
-        const userId = req.body.userId;
-        const user = await userModel.findById(userId);
-        if (!user) {
-            res.status(404).send("User not Found");
-        } else {
-            console.log(user)
-            res.send(user);
+
+        const token = req.cookies;
+        if(!token){
+            throw new Error("Invalid Token Please login again"); 
         }
-
-
+        const decodedMessage =  await jwt.verify(token.token,"devTinder@harsh");
+        const user = await userModel.findById(decodedMessage._id);
+        if(!user){
+            throw new Error("User does not exist, Please Sign up");
+        }
+        res.send(user);
+        
     } catch (error) {
-        res.status(404).status("Something went wrong while fteching the user");
+        res.status(400).send("Error while getting the user from database :" + error.message);
     }
 })
 
