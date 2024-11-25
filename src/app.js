@@ -40,10 +40,10 @@ app.post('/login', async (req, res) => {
         if (!user) {
             throw new Error("User does not exists");
         }
-        const isPasswordValid = await bcrypt.compare(password, user?.password);
+        const isPasswordValid = await user.validatePassword(password);
         if (isPasswordValid) {
 
-            const jwtToken = await jwt.sign({_id : user._id}, "devTinder@harsh");
+            const jwtToken = await user.getJWT();
             res.cookie("token", jwtToken);
             res.send("User login in Sucessfull............");
 

@@ -1,5 +1,7 @@
 import {Schema, model} from "mongoose";
 import validator from 'validator';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const userSchema = new Schema({
     firstName: {
@@ -58,4 +60,15 @@ const userSchema = new Schema({
 }
 )
 
+userSchema.methods.getJWT = async function(){
+   const user = this;
+   const token = await jwt.sign({_id : user._id}, "devTinder@harsh");
+   return token;
+}
+userSchema.methods.validatePassword = async function (userInputPassword) {
+    const user = this;
+    const hashedPassword = user.password;
+    const isPasswordValid = await bcrypt.compare(userInputPassword, hashedPassword);
+    return isPasswordValid;    
+}
 export const userModel = model("User", userSchema);
