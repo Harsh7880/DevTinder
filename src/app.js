@@ -4,7 +4,9 @@ import { userModel } from './models/user.js';
 import bcrypt from "bcrypt";
 import { validateUserFields } from './utils/validations.js';
 import cookieParser from 'cookie-parser';
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import { userAuth } from './middlewares/auth.js';
+
 const app = express();
 app.use(express.json())
 app.use(cookieParser());
@@ -53,18 +55,9 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.get('/profile', async(req,res) => {
+app.get('/profile', userAuth, async(req,res) => {
     try {
-
-        const token = req.cookies;
-        if(!token){
-            throw new Error("Invalid Token Please login again"); 
-        }
-        const decodedMessage =  await jwt.verify(token.token,"devTinder@harsh");
-        const user = await userModel.findById(decodedMessage._id);
-        if(!user){
-            throw new Error("User does not exist, Please Sign up");
-        }
+        const user = req.user;
         res.send(user);
         
     } catch (error) {
@@ -72,64 +65,11 @@ app.get('/profile', async(req,res) => {
     }
 })
 
-app.patch('/user/:userId', async (req, res) => {
-    try {
+app.post('/sendConnectionRequest', userAuth, (req,res)=>{
 
-        const userId = req.params?.userId;
-        const data = req.body;
-        const ALLOWED_UPDATES = [
-            "firstName",
-            "lastName",
-            "age",
-            "gender",
-            "about",
-            "photoUrl",
-            "skills"
-        ]
-
-        const isUpdateAllowed = Object.keys(data).every(k => ALLOWED_UPDATES.includes(k));
-        if (data?.skills?.length > 10) {
-            throw new Error("Please Add skills below 10");
-        }
-
-        if (!isUpdateAllowed) {
-            throw new Error("Update not allowed");
-        }
-
-        await userModel.findByIdAndUpdate(userId, data, {
-            runValidators: true
-        })
-        res.send("User Updated Successfuly");
-
-    } catch (error) {
-        res.status(404).send("Something went wrong while updating the user :" + error.message);
-
-    }
-})
-
-app.get('/feed', async (req, res) => {
-    try {
-        const users = await userModel.find({});
-        if (users.length === 0) {
-            res.status(404).send("User's not Found");
-        } else {
-            res.send(users);
-        }
-    } catch (error) {
-        res.status(400).send("Something went wrong")
-    }
-})
-
-app.delete('/user', async (req, res) => {
-    try {
-
-        const userId = req.body.userId
-        await userModel.findByIdAndDelete(userId);
-        res.send("User deleted successfylly");
-
-    } catch (error) {
-        res.status(400).send("Something went wrong while deleting data")
-    }
+    const user = req.user;
+    console.log("Sending Connection Request..........................");
+    res.send(user.firstName + " sent connection Request Send Successfully")
 })
 
 connectDB().then(() => {

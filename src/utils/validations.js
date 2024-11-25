@@ -11,6 +11,5 @@ export const validateUserFields = (req) => {
         throw new Error("Email is Invalid : " + email);
     } if (!validator.isStrongPassword(password)) {
         throw new Error("Please Enter an Strong Password");
-
     }
 }
